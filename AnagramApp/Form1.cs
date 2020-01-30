@@ -81,7 +81,7 @@ namespace AnagramApp
             var allWords = System.IO.File.ReadAllLines($@"D:\WORLD SKILLS\AnagramApp\words_alpha.txt");
 
             //given that are 10 characters, get only the words that are maximum 10 characters long
-            var possibleWords = allWords.Where(a => a.Length <= randChars.Length).ToList();
+            var possibleWords = allWords.ToList();
 
             //all characters that should be excluded when finding anagrams
             var excludeCharacters = alphaList.ToArray();
