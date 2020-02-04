@@ -23,7 +23,6 @@ namespace AnagramApp
 
         }
 
-
         //The code here will generate 10 random characters
         private void randomCharacters_Click(object sender, EventArgs e)
         {
@@ -45,7 +44,6 @@ namespace AnagramApp
             }
 
             tbRandChar.Text = tenChars;
-
         }
 
         private void generateWords_Click(object sender, EventArgs e)
@@ -59,8 +57,7 @@ namespace AnagramApp
             var alphaList = alphabets.ToList();
 
             //get all of the random characters
-            var randChars = tbRandChar.Text;
-            
+            var randChars = tbRandChar.Text.ToLower(); 
 
             //convert to character array
             var ranCharArr = randChars.ToCharArray();
@@ -80,6 +77,12 @@ namespace AnagramApp
             //call the file for the dictionary of words
             var allWords = System.IO.File.ReadAllLines($@"D:\WORLD SKILLS\AnagramApp\words_alpha.txt");
 
+            //Runtime statistics
+            var sb = new StringBuilder();
+            var StartTime = DateTime.Now;
+            sb.AppendLine($"Started at {DateTime.Now.ToString("yyyy-MM-dd  HH:mm:ss")}");
+
+
             //given that are 10 characters, get only the words that are maximum 10 characters long
             var possibleWords = allWords.ToList();
 
@@ -87,38 +90,61 @@ namespace AnagramApp
             var excludeCharacters = alphaList.ToArray();
             
             //remove all words that have the characters not found in the 10 random characters
-            foreach(var exclude in excludeCharacters)
+            foreach(var exclude in excludeCharacters.AsParallel())
             {
                 possibleWords.RemoveAll(a => a.Contains(exclude));
             }
 
+
             ///check through the random characters and see their count
             ///the objective here is to find the words that have characters that are higher than the stipulated number in the random generated
-            foreach(var ranLetter in ranCharArrUnique)
-            {
-                //get the letter that is being checked
-                var checkLetter = ranLetter;
-                //get the count of that letter in the bunch of randomly generated characters
-                var charCount = ranCharArr.Where(a => a.Equals(checkLetter)).Count();
+            //foreach(var ranLetter in ranCharArrUnique.AsParallel())
+            //{
+            //    //get the letter that is being checked
+            //    var checkLetter = ranLetter;
+            //    //get the count of that letter in the bunch of randomly generated characters
+            //    var charCount = ranCharArr.Where(a => a.Equals(checkLetter)).Count();
 
-                //remove all words where the count of the specified character is higher than the number of the character randomly given
-                var filterWords = possibleWords.Where(a => a.Contains(checkLetter)).ToList();
-                foreach(var word in filterWords)
+            //    //remove all words where the count of the specified character is higher than the number of the character randomly given
+            //    var filterWords = possibleWords.Where(a => a.Contains(checkLetter)).ToList().AsParallel();
+            //    foreach(var word in filterWords)
+            //    {
+            //        var count = word.Where(a => a.Equals(checkLetter)).Count();
+            //        if(count > charCount)
+            //        {
+            //            possibleWords.Remove(word);
+            //        }
+            //    }
+            //}
+
+            foreach(var word in possibleWords)
+            {
+                var wordCountViolation = false;
+                foreach(var ranletter in ranCharArrUnique)
                 {
-                    var count = word.Where(a => a.Equals(checkLetter)).Count();
-                    if(count > charCount)
+                    var charCount = ranCharArr.Where(a => a.Equals(ranletter)).Count();
+
+                    var checkCharCount = word.Where(a => a.Equals(ranletter)).Count();
+
+                    if(checkCharCount > charCount)
                     {
-                        possibleWords.Remove(word);
+                        wordCountViolation = true;
                     }
+                }
+                if(wordCountViolation != true)
+                {
+                    anagramList.Add(word);
                 }
             }
 
-            foreach(var a in possibleWords)
-            {
-                anagramList.Add(a);
-            }
+            lbAnagrams.DataSource = new BindingSource(anagramList, null);
 
-            lbAnagrams.DataSource = new BindingSource(anagramList.OrderBy(a => a.Count()), null);
+            sb.AppendLine($"Ended at {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+            var TS = new TimeSpan(DateTime.Now.Ticks - StartTime.Ticks);
+            sb.AppendLine($"Time Taken (Miliseconds): {TS.TotalMilliseconds}");
+            sb.AppendLine($"Anagrams Found: {possibleWords.Count()}");
+
+            Console.WriteLine(sb);
         }
 
     }
